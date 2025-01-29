@@ -13,7 +13,7 @@
             <Setter Property="Height" Value="28" />
             <Setter Property="FontFamily" Value="Segoe UI Symbol" />
             <Setter Property="FontSize" Value="18" />
-            <Setter  Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center" />
         </Style>
     </Window.Resources>
     <Grid>
@@ -21,31 +21,44 @@
               DragEnter="DoFileListDrop_DragEnter">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" Grid.Row="0">
-                <Button Content="⏮" Style="{StaticResource BarButtons}" FontSize="22" Padding="0 -2 0 0" Click="doPreviousClick"/>
+                <Button Content="⏮" Style="{StaticResource BarButtons}" FontSize="22" Padding="0 -2 0 0"
+                        Click="doPreviousClick" />
                 <Button Content="⏪" Style="{StaticResource BarButtons}" FontSize="22" Padding="0 -2 0 0"
                         Click="doReverseClick" />
                 <Button Content="▶" Style="{StaticResource BarButtons}" Click="doPlayClick" />
-                <Button Content="⏸" Style="{StaticResource BarButtons}" Click="doPauseClick" FontSize="22" Padding="0 -2 0 0"/>
+                <Button Content="⏸" Style="{StaticResource BarButtons}" Click="doPauseClick" FontSize="22"
+                        Padding="0 -2 0 0" />
                 <Button Content="⏹" Style="{StaticResource BarButtons}" Click="doStopClick" />
                 <Button Content="⏩" Style="{StaticResource BarButtons}" FontSize="22" Padding="0 -2 0 0"
                         Click="doForwardClick" />
                 <Button Content="⏭" Style="{StaticResource BarButtons}" FontSize="22" Padding="0 -2 0 0"
                         Click="doNextClick" />
-
             </StackPanel>
-            <Grid Background="Black" Grid.Row="1">
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Slider Name="videoSlider" VerticalAlignment="Bottom" Height="20"
+                        Minimum="0" Maximum="100" Value="0" PreviewMouseDown="Slider_PreviewMouseDown"
+                        PreviewMouseUp="Slider_PreviewMouseUp" PreviewMouseLeftButtonDown="Slider_PreviewMouseLeftButtonDown"
+                        ValueChanged="VideoSlider_ValueChanged" Grid.Column="0" />
+                <TextBlock Name="videoTime" VerticalAlignment="Bottom" Grid.Column="1" />
+            </Grid>
+            <Grid Background="Black" Grid.Row="2">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="7*" />
                     <ColumnDefinition Width="3*" />
                 </Grid.ColumnDefinitions>
                 <MediaElement Name="videoPlayer" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                              LoadedBehavior="Manual" UnloadedBehavior="Manual"
+                              LoadedBehavior="Manual" UnloadedBehavior="Manual" MediaOpened="MediaPlayer_MediaOpened"
+                              MediaEnded="MediaElement_MediaEnded"
                               Grid.Column="0" />
-                <ListBox Name="videoList" SelectionChanged="doSelectionChanged" Grid.Column="1"
-                          />
+                <ListBox Name="videoList" SelectionChanged="doSelectionChanged" Grid.Column="1" />
             </Grid>
         </Grid>
     </Grid>
