@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System.Globalization;
+using System.IO;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -9,6 +11,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using Path = System.IO.Path;
 
 namespace rlvid2
 {
@@ -19,13 +22,22 @@ namespace rlvid2
     {
         private bool fLoaded = false;
         private int iCurrent = 0;
-        private DispatcherTimer _timer;
+        private DispatcherTimer? _timer = null;
         private bool isDragging = false;
 
         public MainWindow()
         {
             InitializeComponent();
             SetupTimer();
+            Closed += MainWindow_Closed;
+        }
+
+        private void MainWindow_Closed(object? sender, EventArgs e)
+        {
+            if (mover != null)
+            {
+                mover.Close();
+            }
         }
 
         string FormatSeconds(double seconds)
@@ -53,7 +65,7 @@ namespace rlvid2
             _timer.Start();
         }
 
-        private void Timer_Tick(object sender, EventArgs e)
+        private void Timer_Tick(object? sender, EventArgs e)
         {
             // Only update the slider if the video is playing
             if (videoPlayer.NaturalDuration.HasTimeSpan && !isDragging)
@@ -69,7 +81,7 @@ namespace rlvid2
         {
             // Set the maximum value for the slider based on the video's duration
             videoSlider.Maximum = videoPlayer.NaturalDuration.TimeSpan.TotalSeconds;
-            videoTime.Text = videoPlayer.NaturalDuration.TimeSpan.TotalSeconds.ToString();
+            videoTime.Text = FormatSeconds(videoPlayer.NaturalDuration.TimeSpan.TotalSeconds);
         }
 
         private void MediaElement_MediaEnded(object sender, RoutedEventArgs e)
@@ -97,7 +109,7 @@ namespace rlvid2
             }
         }
 
-        string? GetCurrentVideo()
+        int GetCurrentIndex()
         {
             if (iCurrent < 0)
             {
@@ -111,10 +123,22 @@ namespace rlvid2
 
             if (iCurrent >= videoList.Items.Count)
             {
+                return -1;
+            }
+
+            return iCurrent;
+        }
+
+        string? GetCurrentVideo()
+        {
+            int current = GetCurrentIndex();
+
+            if (iCurrent == -1)
+            {
                 return null;
             }
 
-            return videoList.Items[iCurrent] as String;
+            return videoList.Items[current] as String;
         }
 
         void LoadCurrentVideo()
@@ -123,8 +147,12 @@ namespace rlvid2
                 UnloadCurrentVideo();
 
             SyncPlayingIndex();
-            videoPlayer.Source = new Uri(GetCurrentVideo());
-            fLoaded = true;
+            string? current = GetCurrentVideo();
+            if (current != null)
+            {
+                videoPlayer.Source = new Uri(current);
+                fLoaded = true;
+            }
         }
 
         void EnsureVideoLoaded()
@@ -135,17 +163,27 @@ namespace rlvid2
             LoadCurrentVideo();
         }
 
-        void UnloadCurrentVideo()
+        void Stop()
         {
             videoPlayer.Stop();
             videoPlayer.Source = null;
             fLoaded = false;
         }
 
-        private void doPlayClick(object sender, RoutedEventArgs e)
+        void UnloadCurrentVideo()
+        {
+            Stop();
+        }
+
+        void Play()
         {
             EnsureVideoLoaded();
             videoPlayer.Play();
+        }
+
+        private void doPlayClick(object sender, RoutedEventArgs e)
+        {
+            Play();
         }
 
         private void doPauseClick(object sender, RoutedEventArgs e)
@@ -155,12 +193,14 @@ namespace rlvid2
 
         private void doStopClick(object sender, RoutedEventArgs e)
         {
-            videoPlayer.Stop();
+            Stop();
         }
 
         private void doSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
         }
+
+        private Mover? mover = null;
 
         private void DoFileListDrop(object sender, DragEventArgs e)
         {
@@ -169,7 +209,17 @@ namespace rlvid2
                 string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
                 foreach (string file in files)
                 {
-                    videoList.Items.Add(file);
+                    if (file.EndsWith("moves.txt", true, CultureInfo.CurrentCulture))
+                    {
+                        if (mover == null)
+                            mover = Mover.ShowMover(MoveItem);
+
+                        mover.LoadMover(file);
+                    }
+                    else
+                    {
+                        videoList.Items.Add(file);
+                    }
                 }
             }
         }
@@ -196,7 +246,7 @@ namespace rlvid2
 
         void SyncPlayingIndex()
         {
-            videoList.SelectedIndex = iCurrent;
+            videoList.SelectedIndex = GetCurrentIndex();
         }
 
         int GetPreviousItem()
@@ -220,11 +270,16 @@ namespace rlvid2
             return iCurrent;
         }
 
-        private void doPreviousClick(object sender, RoutedEventArgs e)
+        void Previous()
         {
             GetPreviousItem();
             LoadCurrentVideo();
             videoPlayer.Play();
+        }
+
+        private void doPreviousClick(object sender, RoutedEventArgs e)
+        {
+            Previous();
         }
 
         private void doReverseClick(object sender, RoutedEventArgs e)
@@ -247,11 +302,16 @@ namespace rlvid2
             videoPlayer.Position = position;
         }
 
-        private void doNextClick(object sender, RoutedEventArgs e)
+        void Next()
         {
             GetNextItem();
             LoadCurrentVideo();
             videoPlayer.Play();
+        }
+
+        private void doNextClick(object sender, RoutedEventArgs e)
+        {
+            Next();
         }
 
         private void Slider_PreviewMouseDown(object sender, MouseButtonEventArgs e)
@@ -279,6 +339,39 @@ namespace rlvid2
             videoSlider.Value = newValue;
 
             syncSliderPosition(newValue);
+        }
+
+
+
+        public void MoveItem(MoverItem item)
+        {
+            string? sourceFile = GetCurrentVideo();
+
+            if (sourceFile == null)
+                return;
+
+            string destPath = MoverGuts.MakeDestinationPath(sourceFile, item.Destination);
+
+            // move to the next video to release the current one
+            Stop();
+            int itemToRemove = GetCurrentIndex();
+            int nextItem = GetNextItem();
+
+            // remove the current item from the list
+            videoList.Items.RemoveAt(itemToRemove);
+            nextItem--;
+
+            // make sure we have the directories created
+            string? destDir = Path.GetDirectoryName(destPath);
+            if (destDir != null && !Directory.Exists(destDir))
+            {
+                Directory.CreateDirectory(destDir);
+            }
+
+            File.Move(sourceFile, destPath);
+
+            iCurrent = nextItem;
+            Play();
         }
     }
 }
