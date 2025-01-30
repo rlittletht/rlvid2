@@ -52,14 +52,12 @@
             </Grid>
             <Grid Background="Black" Grid.Row="2">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="7*" />
-                    <ColumnDefinition Width="3*" />
+                    <ColumnDefinition Width="10*" />
                 </Grid.ColumnDefinitions>
                 <MediaElement Name="videoPlayer" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                               LoadedBehavior="Manual" UnloadedBehavior="Manual" MediaOpened="MediaPlayer_MediaOpened"
                               MediaEnded="MediaElement_MediaEnded"
                               Grid.Column="0" />
-                <ListBox Name="videoList" SelectionChanged="doSelectionChanged" Grid.Column="1" />
             </Grid>
         </Grid>
     </Grid>

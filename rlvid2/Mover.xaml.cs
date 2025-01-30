@@ -29,6 +29,7 @@ namespace rlvid2
         private MoverModel _moverModel { get; set; }= new MoverModel();
         private MoveItemDelegate? _moveItemDelegate = null;
 
+
         public Mover()
         {
             DataContext = _moverModel;

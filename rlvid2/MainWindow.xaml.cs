@@ -21,10 +21,11 @@ namespace rlvid2
     public partial class MainWindow : Window
     {
         private bool fLoaded = false;
-        private int iCurrent = 0;
         private DispatcherTimer? _timer = null;
         private bool isDragging = false;
         private bool paused = false;
+        private Mover? mover = null;
+        private Playlist? playlist = null;
 
         /*----------------------------------------------------------------------------
             %%Function: MainWindow
@@ -80,6 +81,11 @@ namespace rlvid2
             {
                 mover.Close();
             }
+
+            if (playlist != null)
+            {
+                playlist.Close();
+            }
         }
 
         /*----------------------------------------------------------------------------
@@ -127,7 +133,7 @@ namespace rlvid2
                 double currentPosition = videoPlayer.Position.TotalSeconds;
                 videoSlider.Value = currentPosition;
 
-                videoTime.Text = FormatSeconds(videoSlider.Value);
+                videoTime.Text = FormatSeconds(videoPlayer.NaturalDuration.TimeSpan.TotalSeconds - videoSlider.Value);
             }
         }
 
@@ -185,38 +191,16 @@ namespace rlvid2
         ----------------------------------------------------------------------------*/
         int GetCurrentIndex()
         {
-            if (iCurrent < 0)
-            {
-                iCurrent = 0;
-            }
-
-            if (iCurrent >= videoList.Items.Count)
-            {
-                iCurrent = videoList.Items.Count - 1;
-            }
-
-            if (iCurrent >= videoList.Items.Count)
-            {
-                return -1;
-            }
-
-            return iCurrent;
+            return playlist?.CurrentIndex ?? 0;
         }
 
         /*----------------------------------------------------------------------------
-            %%Function: GetCurrentVideo
-            %%Qualified: rlvid2.MainWindow.GetCurrentVideo
+            %%Function: GetCurrentVideoPath
+            %%Qualified: rlvid2.MainWindow.GetCurrentVideoPath
         ----------------------------------------------------------------------------*/
-        string? GetCurrentVideo()
+        string? GetCurrentVideoPath()
         {
-            int current = GetCurrentIndex();
-
-            if (iCurrent == -1)
-            {
-                return null;
-            }
-
-            return videoList.Items[current] as String;
+            return playlist?.CurrentItem?.Path;
         }
 
         /*----------------------------------------------------------------------------
@@ -229,7 +213,7 @@ namespace rlvid2
                 UnloadCurrentVideo();
 
             SyncPlayingIndex();
-            string? current = GetCurrentVideo();
+            string? current = GetCurrentVideoPath();
             if (current != null)
             {
                 videoPlayer.Source = new Uri(current);
@@ -325,14 +309,14 @@ namespace rlvid2
         {
         }
 
-        private Mover? mover = null;
-
         /*----------------------------------------------------------------------------
             %%Function: processDroppedFiles
             %%Qualified: rlvid2.MainWindow.processDroppedFiles
         ----------------------------------------------------------------------------*/
         void processDroppedFiles(string[] files)
         {
+            List<string> newFiles = new List<string>();
+
             foreach (string file in files)
             {
                 if (file.EndsWith("moves.txt", true, CultureInfo.CurrentCulture))
@@ -351,8 +335,17 @@ namespace rlvid2
                 }
                 else
                 {
-                    videoList.Items.Add(file);
+                    newFiles.Add(file);
                 }
+            }
+
+            if (playlist == null)
+            {
+                playlist = Playlist.Show(newFiles);
+            }
+            else
+            {
+                playlist.AddFiles(newFiles);
             }
         }
 
@@ -403,9 +396,9 @@ namespace rlvid2
         ----------------------------------------------------------------------------*/
         void SyncPlayingIndex()
         {
-            videoList.SelectedIndex = GetCurrentIndex();
+//            videoList.SelectedIndex = GetCurrentIndex();
             if (mover != null)
-                mover.UpdateSource(GetCurrentVideo() ?? "");
+                mover.UpdateSource(GetCurrentVideoPath() ?? "");
         }
 
         /*----------------------------------------------------------------------------
@@ -414,13 +407,9 @@ namespace rlvid2
         ----------------------------------------------------------------------------*/
         int GetPreviousItem()
         {
-            iCurrent--;
-
-            if (iCurrent <= 0)
-                iCurrent = 0;
-
+            playlist?.Previous();
             SyncPlayingIndex();
-            return iCurrent;
+            return playlist?.CurrentIndex ?? 0;
         }
 
         /*----------------------------------------------------------------------------
@@ -429,12 +418,9 @@ namespace rlvid2
         ----------------------------------------------------------------------------*/
         int GetNextItem()
         {
-            iCurrent++;
-            if (iCurrent >= videoList.Items.Count - 1)
-                iCurrent = videoList.Items.Count - 1;
-
+            playlist?.Next();
             SyncPlayingIndex();
-            return iCurrent;
+            return playlist?.CurrentIndex ?? 0;
         }
 
         /*----------------------------------------------------------------------------
@@ -568,7 +554,10 @@ namespace rlvid2
         ----------------------------------------------------------------------------*/
         public void MoveItem(MoverItem item, string newName)
         {
-            string? sourceFile = GetCurrentVideo();
+            if (playlist == null)
+                return;
+
+            string? sourceFile = GetCurrentVideoPath();
 
             if (sourceFile == null)
                 return;
@@ -581,8 +570,7 @@ namespace rlvid2
             int nextItem = GetNextItem();
 
             // remove the current item from the list
-            videoList.Items.RemoveAt(itemToRemove);
-            nextItem--;
+            playlist.RemoveItemAt(itemToRemove);
 
             // make sure we have the directories created
             string? destDir = Path.GetDirectoryName(destPath);
@@ -602,7 +590,6 @@ namespace rlvid2
                 MessageBox.Show($"Could not move: {e.Message}");
             }
 
-            iCurrent = nextItem;
             Play();
         }
 
@@ -615,7 +602,7 @@ namespace rlvid2
             processDroppedFiles(
             [
                 "c:\\temp\\ACR.mp4", "c:\\temp\\ACR - Copy.mp4", "c:\\temp\\ACR - Copy - Copy - Copy.mp4", "c:\\temp\\ACR - Copy - Copy - Copy - Copy.mp4",
-                "c:\\temp\\ACR - Copy - Copy.mp4", "c:\\temp\\moves.txt"
+                    "c:\\temp\\ACR - Copy - Copy.mp4", "c:\\temp\\moves.txt"
             ]);
         }
     }
