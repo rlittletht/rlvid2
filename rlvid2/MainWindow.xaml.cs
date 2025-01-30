@@ -253,6 +253,8 @@ namespace rlvid2
         void SyncPlayingIndex()
         {
             videoList.SelectedIndex = GetCurrentIndex();
+            if (mover != null)
+                mover.UpdateSource(GetCurrentVideo() ?? "");
         }
 
         int GetPreviousItem()
@@ -348,14 +350,14 @@ namespace rlvid2
         }
 
 
-        public void MoveItem(MoverItem item)
+        public void MoveItem(MoverItem item, string newName)
         {
             string? sourceFile = GetCurrentVideo();
 
             if (sourceFile == null)
                 return;
 
-            string destPath = MoverGuts.MakeDestinationPath(sourceFile, item.Destination);
+            string destPath = MoverGuts.MakeDestinationPath(sourceFile, item.Destination, newName);
 
             // move to the next video to release the current one
             Stop();

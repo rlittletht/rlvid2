@@ -7,10 +7,24 @@
         mc:Ignorable="d"
         Title="Mover" Height="450" Width="400">
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <StackPanel Orientation="Vertical">
+            <Label Content="Source Name" />
+            <TextBox Name="SourceName" Text="{Binding SourceName, Mode=OneWay}" />
+            <StackPanel Orientation="Horizontal">
+                <Label Content="New Name" />
+                <Button Content="Clean" Click="CleanSourceName"/>
+            </StackPanel>
+            <TextBox Name="NewName" Text="{Binding NewName, Mode=TwoWay}" />
+        </StackPanel>
         <ListView Name="Destinations"
-                 SelectedItem="{Binding CurrentMover, Mode=TwoWay}" SelectionChanged="MoverListBox_SelectionChanged"
-                 ItemsSource="{Binding Path=MoverItems}"
-                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                  SelectedItem="{Binding CurrentMover, Mode=TwoWay}"
+                  SelectionChanged="MoverListBox_SelectionChanged"
+                  ItemsSource="{Binding Path=MoverItems}"
+                  ScrollViewer.HorizontalScrollBarVisibility="Disabled" Grid.Row="1">
             <ListView.ItemsPanel>
                 <ItemsPanelTemplate>
                     <WrapPanel ItemWidth="136" Orientation="Horizontal" />

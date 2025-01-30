@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -12,10 +13,11 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using Path = System.IO.Path;
 
 namespace rlvid2
 {
-    public delegate void MoveItemDelegate(MoverItem item);
+    public delegate void MoveItemDelegate(MoverItem item, string newName);
 
     /// <summary>
     /// Interaction logic for Mover.xaml
@@ -35,7 +37,7 @@ namespace rlvid2
         public void LoadMover(string sFile)
         {
             _moverModel.MoverItems.Clear();
-            StreamReader reader = new StreamReader(sFile);
+            using StreamReader reader = new StreamReader(sFile);
 
             while (!reader.EndOfStream)
             {
@@ -53,11 +55,14 @@ namespace rlvid2
             return mover;
         }
 
+        public void UpdateSource(string source)
+        {
+            _moverModel.SourceName = Path.GetFileName(source);
+            _moverModel.NewName = _moverModel.SourceName;
+        }
+
         private void MoverListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-//            if (_moverModel.CurrentMover != null)
-//                _moveItemDelegate?.Invoke(_moverModel.CurrentMover);
-
             e.Handled = true;
         }
 
@@ -66,7 +71,31 @@ namespace rlvid2
             MoverItem? item = (sender as Button)?.DataContext as MoverItem;
 
             if (item != null)
-                _moveItemDelegate?.Invoke(item);
+            {
+                string newName;
+
+                if (_moverModel.NewName == "")
+                    newName = _moverModel.SourceName;
+                else
+                    newName = _moverModel.NewName;
+
+                _moveItemDelegate?.Invoke(item, newName);
+            }
+        }
+
+        private void CleanSourceName(object sender, RoutedEventArgs e)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            foreach (char c in _moverModel.SourceName)
+            {
+                Regex rex = new Regex(@"[\(\)\[\]{};.<>!@#$%^-_=~]");
+
+                if (char.IsAsciiLetterOrDigit(c) || rex.IsMatch(c.ToString()))
+                    sb.Append(c);
+            }
+
+            _moverModel.NewName = sb.ToString();
         }
     }
 }

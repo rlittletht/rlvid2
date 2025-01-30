@@ -9,11 +9,16 @@ public class MoverGuts
 
     }
 
-    public static string MakeDestinationPath(string source, string destPath)
+    public static string MakeDestinationPath(string source, string destPath, string? newName = null)
     {
         string sourceFilename = Path.GetFileName(source);
         string sourcePath = Path.GetDirectoryName(source) ?? "";
         string dest;
+
+        if (!string.IsNullOrEmpty(newName))
+        {
+            sourceFilename = newName;
+        }
 
         if (Path.IsPathRooted(destPath))
         {
@@ -25,7 +30,7 @@ public class MoverGuts
                     throw new ArgumentException("Source path is not rooted, cannot carry over root path");
                 }
 
-                string sourceRoot = Path.GetPathRoot(source);
+                string sourceRoot = Path.GetPathRoot(source) ?? "";
                 dest = Path.Combine(sourceRoot, destPath.Substring(1), sourceFilename);
             }
             else
