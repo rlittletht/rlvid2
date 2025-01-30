@@ -24,6 +24,8 @@ namespace rlvid2
     /// </summary>
     public partial class Mover : Window
     {
+        Cleaner cleaner = new Cleaner();
+
         private MoverModel _moverModel { get; set; }= new MoverModel();
         private MoveItemDelegate? _moveItemDelegate = null;
 
@@ -34,14 +36,34 @@ namespace rlvid2
             ((App)Application.Current).WindowPlace.Register(this);
         }
 
+        public void LoadCleaner(string file)
+        {
+            cleaner.LoadFile(file);
+        }
+
         public void LoadMover(string sFile)
         {
             _moverModel.MoverItems.Clear();
             using StreamReader reader = new StreamReader(sFile);
 
+            List<string> sLines = new List<string>();
+
             while (!reader.EndOfStream)
             {
-                string sLine = reader.ReadLine();
+                string? sLine = reader.ReadLine();
+                if (sLine == null)
+                    break;
+
+                if (string.IsNullOrWhiteSpace(sLine))
+                    continue;
+
+                sLines.Add(sLine);
+            }
+
+            sLines.Sort();
+
+            foreach (string sLine in sLines)
+            {
                 string[] sParts = sLine.Split('\t');
                 _moverModel.MoverItems.Add(new MoverItem() { Label = sParts[0], Destination = sParts[1] });
             }
@@ -85,17 +107,7 @@ namespace rlvid2
 
         private void CleanSourceName(object sender, RoutedEventArgs e)
         {
-            StringBuilder sb = new StringBuilder();
-
-            foreach (char c in _moverModel.SourceName)
-            {
-                Regex rex = new Regex(@"[\(\)\[\]{};.<>!@#$%^-_=~]");
-
-                if (char.IsAsciiLetterOrDigit(c) || rex.IsMatch(c.ToString()))
-                    sb.Append(c);
-            }
-
-            _moverModel.NewName = sb.ToString();
+            _moverModel.NewName = cleaner.Clean(_moverModel.SourceName);
         }
     }
 }

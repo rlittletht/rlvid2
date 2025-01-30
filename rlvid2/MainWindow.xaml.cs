@@ -24,6 +24,7 @@ namespace rlvid2
         private int iCurrent = 0;
         private DispatcherTimer? _timer = null;
         private bool isDragging = false;
+        private bool paused = false;
 
         public MainWindow()
         {
@@ -31,6 +32,34 @@ namespace rlvid2
             SetupTimer();
             Closed += MainWindow_Closed;
             ((App)Application.Current).WindowPlace.Register(this);
+            this.KeyDown += DoKeyDown;
+        }
+
+        private void DoKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == Key.Right)
+                Forward();
+            else if (e.Key == Key.Left)
+                Reverse();
+            else if (e.Key == Key.Space)
+            {
+                if (paused)
+                {
+                    Play();
+                }
+                else
+                {
+                    Pause();
+                }
+            }
+            else if (e.Key == Key.N)
+            {
+                Next();
+            }
+            else if (e.Key == Key.P)
+            {
+                Previous();
+            }
         }
 
         private void MainWindow_Closed(object? sender, EventArgs e)
@@ -180,6 +209,7 @@ namespace rlvid2
         {
             EnsureVideoLoaded();
             videoPlayer.Play();
+            paused = false;
         }
 
         private void doPlayClick(object sender, RoutedEventArgs e)
@@ -187,9 +217,15 @@ namespace rlvid2
             Play();
         }
 
-        private void doPauseClick(object sender, RoutedEventArgs e)
+        void Pause()
         {
             videoPlayer.Pause();
+            paused = true;
+        }
+
+        private void doPauseClick(object sender, RoutedEventArgs e)
+        {
+            Pause();
         }
 
         private void doStopClick(object sender, RoutedEventArgs e)
@@ -213,6 +249,13 @@ namespace rlvid2
                         mover = Mover.ShowMover(MoveItem);
 
                     mover.LoadMover(file);
+                }
+                else if (file.EndsWith("cleaner.txt", true, CultureInfo.CurrentCulture))
+                {
+                    if (mover == null)
+                        mover = Mover.ShowMover(MoveItem);
+
+                    mover.LoadCleaner(file);
                 }
                 else
                 {
@@ -290,7 +333,7 @@ namespace rlvid2
             Previous();
         }
 
-        private void doReverseClick(object sender, RoutedEventArgs e)
+        void Reverse()
         {
             TimeSpan position = videoPlayer.Position;
 
@@ -301,13 +344,23 @@ namespace rlvid2
             videoPlayer.Position = position;
         }
 
-        private void doForwardClick(object sender, RoutedEventArgs e)
+        private void doReverseClick(object sender, RoutedEventArgs e)
+        {
+            Reverse();
+        }
+
+        void Forward()
         {
             TimeSpan position = videoPlayer.Position;
 
             position += TimeSpan.FromSeconds(30);
 
             videoPlayer.Position = position;
+        }
+
+        private void doForwardClick(object sender, RoutedEventArgs e)
+        {
+            Forward();
         }
 
         void Next()
@@ -348,7 +401,6 @@ namespace rlvid2
 
             syncSliderPosition(newValue);
         }
-
 
         public void MoveItem(MoverItem item, string newName)
         {
