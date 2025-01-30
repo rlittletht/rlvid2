@@ -5,18 +5,24 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:rlvid2"
         mc:Ignorable="d"
-        Title="Mover" Height="450" Width="200">
+        Title="Mover" Height="450" Width="400">
     <Grid>
-        <ListBox Name="Destinations"
+        <ListView Name="Destinations"
                  SelectedItem="{Binding CurrentMover, Mode=TwoWay}" SelectionChanged="MoverListBox_SelectionChanged"
-                 ItemsSource="{Binding Path=MoverItems}">
-            <ListBox.ItemTemplate>
+                 ItemsSource="{Binding Path=MoverItems}"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+            <ListView.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel ItemWidth="136" Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+            </ListView.ItemsPanel>
+            <ListView.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal">
-                        <Button Width="128" Content="{Binding Label}" Click="RemoveMover_Click" />
+                        <Button Width="124" Content="{Binding Label}" Click="RemoveMover_Click" />
                     </StackPanel>
                 </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
+            </ListView.ItemTemplate>
+        </ListView>
     </Grid>
 </Window>

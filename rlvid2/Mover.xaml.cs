@@ -29,6 +29,7 @@ namespace rlvid2
         {
             DataContext = _moverModel;
             InitializeComponent();
+            ((App)Application.Current).WindowPlace.Register(this);
         }
 
         public void LoadMover(string sFile)

@@ -37,6 +37,7 @@
                         Click="doForwardClick" />
                 <Button Content="⏭" Style="{StaticResource BarButtons}" FontSize="22" Padding="0 -2 0 0"
                         Click="doNextClick" />
+                <Button Content="LoadTestData" Click="LoadTestData"/>
             </StackPanel>
             <Grid Grid.Row="1">
                 <Grid.ColumnDefinitions>

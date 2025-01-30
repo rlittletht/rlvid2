@@ -13,4 +13,8 @@
     <Optimize>False</Optimize>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="RestoreWindowPlace" Version="2.1.0" />
+  </ItemGroup>
+
 </Project>

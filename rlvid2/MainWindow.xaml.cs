@@ -30,6 +30,7 @@ namespace rlvid2
             InitializeComponent();
             SetupTimer();
             Closed += MainWindow_Closed;
+            ((App)Application.Current).WindowPlace.Register(this);
         }
 
         private void MainWindow_Closed(object? sender, EventArgs e)
@@ -202,25 +203,30 @@ namespace rlvid2
 
         private Mover? mover = null;
 
+        void processDroppedFiles(string[] files)
+        {
+            foreach (string file in files)
+            {
+                if (file.EndsWith("moves.txt", true, CultureInfo.CurrentCulture))
+                {
+                    if (mover == null)
+                        mover = Mover.ShowMover(MoveItem);
+
+                    mover.LoadMover(file);
+                }
+                else
+                {
+                    videoList.Items.Add(file);
+                }
+            }
+        }
+
         private void DoFileListDrop(object sender, DragEventArgs e)
         {
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-                foreach (string file in files)
-                {
-                    if (file.EndsWith("moves.txt", true, CultureInfo.CurrentCulture))
-                    {
-                        if (mover == null)
-                            mover = Mover.ShowMover(MoveItem);
-
-                        mover.LoadMover(file);
-                    }
-                    else
-                    {
-                        videoList.Items.Add(file);
-                    }
-                }
+                processDroppedFiles(files);
             }
         }
 
@@ -342,7 +348,6 @@ namespace rlvid2
         }
 
 
-
         public void MoveItem(MoverItem item)
         {
             string? sourceFile = GetCurrentVideo();
@@ -368,10 +373,28 @@ namespace rlvid2
                 Directory.CreateDirectory(destDir);
             }
 
-            File.Move(sourceFile, destPath);
+            try
+            {
+                FileInfo fi = new FileInfo(sourceFile);
+                fi.MoveTo(destPath);
+                // File.Move(sourceFile, destPath);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show($"Could not move: {e.Message}");
+            }
 
             iCurrent = nextItem;
             Play();
+        }
+
+        private void LoadTestData(object sender, RoutedEventArgs e)
+        {
+            processDroppedFiles(
+            [
+                "c:\\temp\\ACR.mp4", "c:\\temp\\ACR - Copy.mp4", "c:\\temp\\ACR - Copy - Copy - Copy.mp4", "c:\\temp\\ACR - Copy - Copy - Copy - Copy.mp4",
+                "c:\\temp\\ACR - Copy - Copy.mp4", "c:\\temp\\moves.txt"
+            ]);
         }
     }
 }
