@@ -43,7 +43,7 @@ namespace rlvid2
             set => _model.CurrentIndex = value;
         }
 
-        public static Playlist Show(IEnumerable<string> sources)
+        public static Playlist Show(IEnumerable<string> sources, Window? parent)
         {
             Playlist playlist = new Playlist();
 
@@ -55,6 +55,7 @@ namespace rlvid2
             }
 
             playlist._model.CurrentItem = playlist._model.PlaylistItems[0];
+            playlist.Owner = parent;
             playlist.Show();
 
             return playlist;

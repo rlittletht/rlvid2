@@ -322,14 +322,14 @@ namespace rlvid2
                 if (file.EndsWith("moves.txt", true, CultureInfo.CurrentCulture))
                 {
                     if (mover == null)
-                        mover = Mover.ShowMover(MoveItem);
+                        mover = Mover.ShowMover(MoveItem, this);
 
                     mover.LoadMover(file);
                 }
                 else if (file.EndsWith("cleaner.txt", true, CultureInfo.CurrentCulture))
                 {
                     if (mover == null)
-                        mover = Mover.ShowMover(MoveItem);
+                        mover = Mover.ShowMover(MoveItem, this);
 
                     mover.LoadCleaner(file);
                 }
@@ -341,7 +341,7 @@ namespace rlvid2
 
             if (playlist == null)
             {
-                playlist = Playlist.Show(newFiles);
+                playlist = Playlist.Show(newFiles, this);
             }
             else
             {

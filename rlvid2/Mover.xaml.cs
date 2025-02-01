@@ -70,9 +70,13 @@ namespace rlvid2
             }
         }
 
-        public static Mover ShowMover(MoveItemDelegate del)
+        public static Mover ShowMover(MoveItemDelegate del, Window? owner = null)
         {
             Mover mover = new Mover();
+            if (owner != null)
+            {
+                mover.Owner = owner;
+            }
             mover.Show();
             mover._moveItemDelegate = del;
             return mover;
